@@ -1383,7 +1383,7 @@ vunit:     parseFloat(r['vunit'] || r['Valor Unit']) || 0,
 dataAriba: r['dataAriba'] || g('Data Ariba','Data Ariba'),
 dataImpl:  r['dataImpl'] || g('Data Implantação','Data Implantacao'),
 dataProm:  r['dataProm'] || g('Data Prometida','Data Prometida'),
-status:    r['status'] || r['Status'] || 'Análise'  
+status:    r['status'] || r['Status'] || 'Análise',  
 etapa:     (()=>{ const e=(r['etapa'] || r['Etapa'] || 'Implantação').trim(); const m={'Implantacao':'Implantação','Implantação':'Implantação','Concluido':'Concluído','Concluído':'Concluído','Finalizado':'Concluído','finalizado':'Concluído','Logistica':'Logística','Logística':'Logística','Estoque':'Estoque','Compras':'Compras'}; return m[e]||e; })(),      
   }).filter(p=>p.id>0 || p.numPedido || p.oc || p.cliente);
   pedidos = pedidos.map((p, idx) => ({ ...p, id: p.id>0 ? p.id : idx + 1 }));

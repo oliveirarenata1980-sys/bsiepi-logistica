@@ -2545,11 +2545,11 @@ function loadEmbeddedData() {
 }
 
 // Override isConcluido — check statusFinal OR entregue+dataEntrega
-function isConcluido(p) {
-  const l = dadosLogistica[p.id];
-  if (!l) return false;
-  return l.entregue === 'SIM' && l.dataEntrega !== '';
-}
+
+
+
+
+
 
 // Override updateBadges to include concluidos
 function updateBadges() {

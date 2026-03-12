@@ -1152,10 +1152,13 @@ function diasHtml(p){
   return d>5?`<span class="dchip dc-ok">+${d}d</span>`:d>=0?`<span class="dchip dc-warn">${d}d</span>`:`<span class="dchip dc-bad">${d}d</span>`;
 }
 function isConcluido(p){
-  return p.etapa==='Concluído' || p.etapa==='Concluido';
+  if(!p.etapa) return false;
+  const e = p.etapa.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,''); // remove acentos
+  return e === 'concluido' || e === 'finalizado';
 }
 function etapaBadge(e){
-  const M={'Implantação':'b-blue 📋','Compras':'b-purple 🛒','Estoque':'b-orange 📦','Logística':'b-green 🚚'};
+  const M={'Implantação':'b-blue 📋','Compras':'b-purple 🛒','Estoque':'b-orange 📦','Logística':'b-green 🚚','Concluído':'b-teal 🏁','Concluido':'b-teal 🏁'};
   const v=M[e]||'b-gray';
   const [cls,ico]=(v+' ').split(' ');
   return `<span class="badge ${cls}">${ico||''} ${e||'—'}</span>`;
@@ -1334,7 +1337,7 @@ async function syncFromSheets(showLoading=false){
     // Re-render current page
     const activePage = document.querySelector('.page.active')?.id?.replace('page-','');
     if(activePage) {
-      const renders={dashboard:renderDashboard,pedidos:renderPedidos,semaforo:renderSemaforo,implantacao:renderImplantacao,compras:()=>renderSetor('compras'),estoque:()=>renderSetor('estoque'),logistica:()=>renderSetor('logistica')};
+      const renders={dashboard:renderDashboard,pedidos:renderPedidos,semaforo:renderSemaforo,implantacao:renderImplantacao,compras:()=>renderSetor('compras'),estoque:()=>renderSetor('estoque'),logistica:()=>renderSetor('logistica'),concluidos:renderConcluidos,desempenho:renderDesempenho,relatorios:renderRelatorios};
       if(renders[activePage]) renders[activePage]();
     } else {
       renderDashboard();
@@ -1372,7 +1375,7 @@ function loadDataFromSheets(data){
       dataImpl:  g('Data Implantação','Data Implantacao'),
       dataProm:  g('Data Prometida','Data Prometida'),
       status:    r['Status']||'Análise',
-      etapa:     (()=>{ const e=r['Etapa']||'Implantação'; const m={'Implantacao':'Implantação','Concluido':'Concluído','Logistica':'Logística','Estoque':'Estoque','Compras':'Compras'}; return m[e]||e; })(),
+      etapa:     (()=>{ const e=(r['Etapa']||'Implantação').trim(); const m={'Implantacao':'Implantação','Implantação':'Implantação','Concluido':'Concluído','Concluído':'Concluído','Finalizado':'Concluído','finalizado':'Concluído','Logistica':'Logística','Logística':'Logística','Estoque':'Estoque','Compras':'Compras'}; return m[e]||e; })(),
     };
   }).filter(p=>p.id>0);
 
@@ -2215,8 +2218,9 @@ async function moverEtapa(id,novaEtapa,setor){
   updateBadges();
   // Re-render origem e destino
   renderSetor(setor);
-  const dest={'Compras':'compras','Estoque':'estoque','Logística':'logistica','Concluído':'concluidos'};
+  const dest={'Compras':'compras','Estoque':'estoque','Logística':'logistica'};
   if(dest[novaEtapa]) renderSetor(dest[novaEtapa]);
+  else if(isConcluido({etapa:novaEtapa})) renderConcluidos();
   renderDashboard();
 }
 
@@ -2294,7 +2298,7 @@ async function savePedidoModal(){
   closeOverlay('modal-ped');
   await enviarParaSheets('savePedido', pedidoToSheetRow(p));
   updateBadges();
-  renderSetor('concluidos');
+  renderConcluidos();
   if(document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
   else if(document.getElementById('page-pedidos').classList.contains('active')) renderPedidos();
   else if(document.getElementById('page-implantacao').classList.contains('active')) renderImplantacao();
